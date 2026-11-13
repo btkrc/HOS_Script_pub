@@ -1,6 +1,5 @@
 #include "control.h"
 
-
 Control::Control(WId wid, QSettings *settings, Tool *tool, QWidget *father) {
     this->hwnd = (HWND)wid;
     this->hRestartupThread = 0;
@@ -53,7 +52,6 @@ DWORD Control::destroyDM() {
     return 0;
 }
 
-
 void Control::raiseCurrentIndex() {
     params.currentIndex++;
     if (params.currentIndex >= params.accountNum) {
@@ -72,42 +70,33 @@ int Control::getCurrentIndex() {
 }
 
 void Control::iniConnect() {
-    QObject::connect(
-        this,
-        SIGNAL(restartupThreadEnd(int)),
-        this,
-        SLOT(onRestartupThreadEnd(int))
-    );
+    QObject::connect(this, SIGNAL(restartupThreadEnd(int)), this, SLOT(onRestartupThreadEnd(int)));
 }
 
-//注册大漠插件
+// 注册大漠插件
 Idmsoft *Control::GetDmObject() {
     Idmsoft *m_dm = NULL;
     bool m_bInit = false;
-    //直接加载dll创建对象，避免进行注册文件
-    typedef HRESULT(_stdcall *pfnGCO)(REFCLSID, REFIID, void **);
+    // 直接加载dll创建对象，避免进行注册文件
+    typedef HRESULT(_stdcall * pfnGCO)(REFCLSID, REFIID, void **);
     pfnGCO fnGCO = NULL;
     HINSTANCE hdllInst = LoadLibrary(TEXT("dm.dll"));
     fnGCO = (pfnGCO)GetProcAddress(hdllInst, "DllGetClassObject");
-    if (fnGCO != 0)
-    {
+    if (fnGCO != 0) {
         IClassFactory *pcf = NULL;
         HRESULT hr = (fnGCO)(__uuidof(dmsoft), IID_IClassFactory, (void **)&pcf);
-        if (SUCCEEDED(hr) && (pcf != NULL))
-        {
+        if (SUCCEEDED(hr) && (pcf != NULL)) {
             hr = pcf->CreateInstance(NULL, __uuidof(Idmsoft), (void **)&m_dm);
             if ((SUCCEEDED(hr) && (m_dm != NULL)) == FALSE)
                 return NULL;
-
         }
         pcf->Release();
         m_bInit = true;
-    }
-    else
+    } else
         m_bInit = false;
 
-    //dm->Reg(L"注册码", L"dass");//收费版本需要注册后才能使用
-/*6.1538版本修改内存可直接调用*/
+    // dm->Reg(L"注册码", L"dass");//收费版本需要注册后才能使用
+    /*6.1538版本修改内存可直接调用*/
     DWORD pid = GetCurrentProcessId();
     int handle = (int)GetModuleHandle(TEXT("dm.dll"));
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
@@ -115,17 +104,16 @@ Idmsoft *Control::GetDmObject() {
     bool is = WriteProcessMemory(hProcess, LPVOID(handle + 1078240), &value, 1, NULL);
 
     return m_dm;
-
 }
 
 /*技能辅助线*************************************
 
 **********************************************/
 
-//void Control::paintCirle(int flag) {
-//    this->paintFlag = flag;
-//    HANDLE hThread = newThread((LPVOID)paintCircleThreadProc);
-//}
+void Control::paintCirle(int flag) {
+    this->paintFlag = flag;
+    HANDLE hThread = newThread((LPVOID)paintCircleThreadProc);
+}
 
 void Control::heqiangshidan() {
     /*关闭参与线程*/
@@ -134,13 +122,11 @@ void Control::heqiangshidan() {
         this->iniDM();
         hHEQIANGSHIDAN = newThread((LPVOID)heqiangshidanThreadProc);
         this->tool->playSound(":/HOS_Script/Resources/hqsd1.wav");
-    }
-    else {
+    } else {
         bHeqiangshidan = FALSE;
         this->destroyDM();
         this->tool->playSound(":/HOS_Script/Resources/hqsd2.wav");
         detectThreadHandle(&hHEQIANGSHIDAN);
-
     }
 }
 /*乱斗挂机送人头 接口函数*/
@@ -149,26 +135,25 @@ void Control::luandouguaji() {
         this->bLuandouguaji = TRUE;
         this->hLUANDOUGUAJI = newThread((LPVOID)luandouguajiThreadProc);
         this->tool->playSound(":/HOS_Script/Resources/ah.wav");
-    }
-    else {
+    } else {
         this->bLuandouguaji = FALSE;
         this->tool->playSound(":/HOS_Script/Resources/mua.wav");
         detectThreadHandle(&hLUANDOUGUAJI);
     }
 }
-//BOOL Control::isPainting() {
-//    return this->painting;
-//}
-//void Control::setPainting(BOOL flag) {
-//    this->painting = flag;
-//    if (flag == FALSE) {
-//        HWND hwnd = FindWindow(TEXT("Heroes of the Storm"), TEXT("《风暴英雄》"));
-//        if (hwnd) {
-//            //SendMessage(hwnd, WM_KEYDOWN, VK_SPACE, 0);
-//            keybd_event(VK_SPACE, 0, KEYEVENTF_KEYUP, 0);
-//        }
-//    }
-//}
+BOOL Control::isPainting() {
+    return this->painting;
+}
+void Control::setPainting(BOOL flag) {
+    this->painting = flag;
+    if (flag == FALSE) {
+        HWND hwnd = FindWindow(TEXT("Heroes of the Storm"), TEXT("《风暴英雄》"));
+        if (hwnd) {
+            // SendMessage(hwnd, WM_KEYDOWN, VK_SPACE, 0);
+            keybd_event(VK_SPACE, 0, KEYEVENTF_KEYUP, 0);
+        }
+    }
+}
 
 void Control::setManual(BOOL b) {
     this->manual = b;
@@ -178,50 +163,47 @@ void Control::setFastPattern(BOOL b) {
     this->fastPattern = b;
 }
 
+//
+DWORD paintCircleThreadProc(LPVOID lpParams) {
+    Control *pControl = (Control *)lpParams;
+    HWND hwnd = FindWindow(TEXT("Heroes of the Storm"), TEXT("《风暴英雄》"));
+    if (hwnd) {
+        // SendMessage(hwnd, WM_KEYDOWN, VK_SPACE, 0);
+        keybd_event(VK_SPACE, 0, 0, 0);
+        int left, top, right, bottom;
+        if (pControl->paintFlag == 1) {
+            left = pControl->params.smallPaintLeft;
+            top = pControl->params.smallPaintTop;
+            right = pControl->params.smallPaintRight;
+            bottom = pControl->params.smallPaintBottom;
 
-//
-//DWORD paintCircleThreadProc(LPVOID lpParams) {
-//    Control *pControl = (Control *)lpParams;
-//    HWND hwnd = FindWindow(TEXT("Heroes of the Storm"), TEXT("《风暴英雄》"));
-//    if (hwnd) {
-//        //SendMessage(hwnd, WM_KEYDOWN, VK_SPACE, 0);
-//        keybd_event(VK_SPACE, 0, 0, 0);
-//        int left, top, right, bottom;
-//        if (pControl->paintFlag == 1) {
-//            left = pControl->params.smallPaintLeft;
-//            top = pControl->params.smallPaintTop;
-//            right = pControl->params.smallPaintRight;
-//            bottom = pControl->params.smallPaintBottom;
-//
-//        }
-//        else {
-//            left = pControl->params.largePaintLeft;
-//            top = pControl->params.largePaintTop;
-//            right = pControl->params.largePaintRight;
-//            bottom = pControl->params.largePaintBottom;
-//
-//        }
-//        pControl->setPainting(TRUE);
-//        while (pControl->isPainting()) {
-//            PAINTSTRUCT ps;
-//            //HDC  hdc = BeginPaint(hwnd, &ps);
-//            HDC hdc = GetDC(hwnd);
-//            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
-//            /*透明画刷，绘制空心圆*/
-//            HBRUSH hBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
-//            SelectObject(hdc, hPen);
-//            SelectObject(hdc, hBrush);
-//            Ellipse(hdc, left, top, right, bottom);
-//
-//            DeleteObject(hPen);
-//            DeleteObject(hBrush);
-//            ReleaseDC(hwnd, hdc);
-//
-//            //EndPaint(hwnd, &ps);
-//        }
-//    }
-//    return 0;
-//}
+        } else {
+            left = pControl->params.largePaintLeft;
+            top = pControl->params.largePaintTop;
+            right = pControl->params.largePaintRight;
+            bottom = pControl->params.largePaintBottom;
+        }
+        pControl->setPainting(TRUE);
+        while (pControl->isPainting()) {
+            PAINTSTRUCT ps;
+            // HDC  hdc = BeginPaint(hwnd, &ps);
+            HDC hdc = GetDC(hwnd);
+            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
+            /*透明画刷，绘制空心圆*/
+            HBRUSH hBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+            SelectObject(hdc, hPen);
+            SelectObject(hdc, hBrush);
+            Ellipse(hdc, left, top, right, bottom);
+
+            DeleteObject(hPen);
+            DeleteObject(hBrush);
+            ReleaseDC(hwnd, hdc);
+
+            // EndPaint(hwnd, &ps);
+        }
+    }
+    return 0;
+}
 
 /*技能辅助线end*************************************
 
@@ -230,72 +212,37 @@ void Control::setFastPattern(BOOL b) {
 bool Control::setHotkey() {
     /*注册CTRL + 1*/
     BOOL ret = false;
-    if (!RegisterHotKey(
-        hwnd,
-        this->CTRL_1,
-        MOD_CONTROL,
-        0x31
-    )) {
+    if (!RegisterHotKey(hwnd, this->CTRL_1, MOD_CONTROL, 0x31)) {
         MessageBox(hwnd, TEXT("RegisterHotKey Error:CTRL_1\n"), TEXT("ERROR!"), MB_OK | MB_ICONEXCLAMATION);
         return false;
     }
     /*注册CTRL + 2*/
-    if (!RegisterHotKey(
-        hwnd,
-        this->CTRL_2,
-        MOD_CONTROL,
-        0x32
-    )) {
+    if (!RegisterHotKey(hwnd, this->CTRL_2, MOD_CONTROL, 0x32)) {
         MessageBox(hwnd, TEXT("RegisterHotKey Error:CTRL_2\n"), TEXT("ERROR!"), MB_OK | MB_ICONEXCLAMATION);
         return false;
     }
     /*注册CTRL + 3*/
-    if (!RegisterHotKey(
-        hwnd,
-        this->CTRL_3,
-        MOD_CONTROL,
-        0x33
-    )) {
+    if (!RegisterHotKey(hwnd, this->CTRL_3, MOD_CONTROL, 0x33)) {
         MessageBox(hwnd, TEXT("RegisterHotKey Error:CTRL_3\n"), TEXT("ERROR!"), MB_OK | MB_ICONEXCLAMATION);
         return false;
     }
     /*注册CTRL + 4*/
-    if (!RegisterHotKey(
-        hwnd,
-        this->CTRL_4,
-        MOD_CONTROL,
-        0x34
-    )) {
+    if (!RegisterHotKey(hwnd, this->CTRL_4, MOD_CONTROL, 0x34)) {
         MessageBox(hwnd, TEXT("RegisterHotKey Error:CTRL_4\n"), TEXT("ERROR!"), MB_OK | MB_ICONEXCLAMATION);
         return false;
     }
     /*注册CTRL + F7*/
-    if (!RegisterHotKey(
-        hwnd,
-        this->CTRL_F7,
-        MOD_CONTROL,
-        VK_F7
-    )) {
+    if (!RegisterHotKey(hwnd, this->CTRL_F7, MOD_CONTROL, VK_F7)) {
         MessageBox(hwnd, TEXT("RegisterHotKey Error:CTRL_F7\n"), TEXT("ERROR!"), MB_OK | MB_ICONEXCLAMATION);
         return false;
     }
     /*注册CTRL + F1*/
-    if (!RegisterHotKey(
-        hwnd,
-        this->CTRL_F1,
-        MOD_CONTROL,
-        VK_F1
-    )) {
+    if (!RegisterHotKey(hwnd, this->CTRL_F1, MOD_CONTROL, VK_F1)) {
         MessageBox(hwnd, TEXT("RegisterHotKey Error:CTRL_F7\n"), TEXT("ERROR!"), MB_OK | MB_ICONEXCLAMATION);
         return false;
     }
     /*注册CTRL + F2*/
-    if (!RegisterHotKey(
-        hwnd,
-        this->CTRL_F2,
-        MOD_CONTROL,
-        VK_F2
-    )) {
+    if (!RegisterHotKey(hwnd, this->CTRL_F2, MOD_CONTROL, VK_F2)) {
         MessageBox(hwnd, TEXT("RegisterHotKey Error:CTRL_F7\n"), TEXT("ERROR!"), MB_OK | MB_ICONEXCLAMATION);
         return false;
     }
@@ -326,21 +273,14 @@ void Control::relHotkey() {
     }
 }
 
-
 void Control::readSettings() {
     settings->setIniCodec(QTextCodec::codecForName("utf-8"));
     settings->beginGroup("DevOption");
 
     tool->QString2Wchar(settings->value("HOSPath").toString(), &params.HOSPath);
 
-    tool->QString2Wchar(
-        settings->value("szExeFile").toString(),
-        &params.szExeFile
-    );
-    tool->QString2Wchar(
-        settings->value("CookiesPath").toString(),
-        &params.CookiesPath
-    );
+    tool->QString2Wchar(settings->value("szExeFile").toString(), &params.szExeFile);
+    tool->QString2Wchar(settings->value("CookiesPath").toString(), &params.CookiesPath);
 
     params.currentIndex = settings->value("CurrentIndex", 0).toInt();
     settings->endGroup();
@@ -386,7 +326,6 @@ void Control::readSettings() {
     params.heqiangshidanquanping = settings->value("heqiangshidanquanping").toInt();
     settings->endGroup();
 
-
     /*帐号信息读取*/
     settings->beginReadArray("logins");
     params.accountNum = settings->value("size").toInt();
@@ -402,7 +341,6 @@ void Control::readSettings() {
 
     settings->endArray();
 }
-
 
 /*进程相关功能函数*******************************************************
 /
@@ -439,37 +377,20 @@ BOOL Control::createProc(HANDLE *hProc, LPCTSTR szFileName) {
     ZeroMemory(&pi, sizeof(pi));
     si.cb = sizeof(si);
 
-
-    //strcpy_s(str, size, szFileName);
-    if (CreateProcess(
-        szFileName,
-        NULL,
-        NULL,
-        NULL,
-        FALSE,
-        CREATE_UNICODE_ENVIRONMENT,
-        NULL,
-        NULL,
-        &si,
-        &pi
-    )) {
+    // strcpy_s(str, size, szFileName);
+    if (CreateProcess(szFileName, NULL, NULL, NULL, FALSE, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &pi)) {
         *hProc = pi.hProcess;
         CloseHandle(pi.hThread);
-        //delete str;
+        // delete str;
         return TRUE;
     }
-    //delete str;
+    // delete str;
     return FALSE;
 }
 
-
 /*根据进程杀死进程*/
 BOOL Control::killProc(DWORD procID, UINT uExitCode) {
-    HANDLE hProc = OpenProcess(
-        PROCESS_ALL_ACCESS,
-        FALSE,
-        procID
-    );
+    HANDLE hProc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procID);
     DWORD ret = GetLastError();
     if (!hProc) {
         MessageBox(hwnd, TEXT("OpenProcess Error\n"), NULL, MB_OK | MB_ICONEXCLAMATION);
@@ -515,14 +436,7 @@ void Control::detectCookies() {
 /*创建线程*/
 HANDLE Control::newThread(PVOID pFunc) {
     /*把当前对象地址传进参数，友元不属于类成员*/
-    HANDLE hThread = CreateThread(
-        NULL,
-        0,
-        (LPTHREAD_START_ROUTINE)pFunc,
-        this,
-        0,
-        NULL
-    );
+    HANDLE hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)pFunc, this, 0, NULL);
 
     if (!hThread) {
         MessageBox(hwnd, TEXT("CreateThread Error\n"), NULL, MB_OK | MB_ICONEXCLAMATION);
@@ -539,16 +453,16 @@ VOID Control::moveToWaitOrGame(HWND hwnd, DWORD flags) {
 
     /*将要切换到game模式*/
     if (flags == 0) {
-        //insertAfter = HWND_TOPMOST;
-        //insertAfter = HWND_TOP;
-        //paramFlag = SWP_SHOWWINDOW;
-        //insertAfter = HWND_BOTTOM;
+        // insertAfter = HWND_TOPMOST;
+        // insertAfter = HWND_TOP;
+        // paramFlag = SWP_SHOWWINDOW;
+        // insertAfter = HWND_BOTTOM;
         focusFlag = TRUE;
         rect = params.gameRect;
         this->waiting = FALSE;
-    }/*将要切换到wait模式*/
+    } /*将要切换到wait模式*/
     else if (flags == 1) {
-        //insertAfter = HWND_NOTOPMOST;
+        // insertAfter = HWND_NOTOPMOST;
         insertAfter = HWND_BOTTOM;
         paramFlag = SWP_NOACTIVATE;
         focusFlag = FALSE;
@@ -556,29 +470,16 @@ VOID Control::moveToWaitOrGame(HWND hwnd, DWORD flags) {
         this->waiting = TRUE;
     }
 
-    SetWindowPos(
-        hwnd,
-        insertAfter,
-        rect.left,
-        rect.top,
-        rect.right - rect.left,
-        rect.bottom - rect.top,
-        paramFlag
-    );
+    SetWindowPos(hwnd, insertAfter, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, paramFlag);
 
     tool->setFocusHOS(focusFlag);
 }
 
-
 /**************************************************************************************/
-
 
 /**************************     热键接口函数     **************************/
 
-
 /**************************************************************************************/
-
-
 
 /*CTRL_1 接口 移动窗口*/
 void Control::moveWindow() {
@@ -596,20 +497,16 @@ void Control::moveWindow() {
         rectWait = params.waitRect;
         rectGame = params.gameRect;
 
-        if (rect.left != rectGame.left
-            || rect.right != rectGame.right
-            || rect.top != rectGame.top
-            || rect.bottom != rectGame.bottom) {
+        if (rect.left != rectGame.left || rect.right != rectGame.right || rect.top != rectGame.top ||
+            rect.bottom != rectGame.bottom) {
             this->detectThreadHandle(&hRestartupThread);
             this->moveToWaitOrGame(hwndHOS, 0);
-            //emit needPlaySound(2);
-        }
-        else {
+            // emit needPlaySound(2);
+        } else {
             this->moveToWaitOrGame(hwndHOS, 1);
         }
         tool->detectedCursor(&params.limitLeftTop, &params.limitRightBottom, &params.gameRect);
     }
-
 }
 
 /*CTRL_3 接口*/
@@ -625,8 +522,6 @@ void Control::quitHOS() {
     }
 }
 
-
-
 /*CTRL_4 接口*/
 void Control::restartupHOS() {
     /*重开不检测，直接接触限制*/
@@ -634,9 +529,7 @@ void Control::restartupHOS() {
 
     detectThreadHandle(&this->hRestartupThread);
     this->hRestartupThread = newThread((PVOID)restartupHOSThreadProc);
-
 }
-
 
 /*CTRL_F7 接口*/
 void Control::inputAccount() {
@@ -645,25 +538,21 @@ void Control::inputAccount() {
         CloseHandle(hThread);
     }
     ///*调试*/
-    //HWND hwndHOS = FindWindow(TEXT("Heroes of the Storm"), TEXT("《风暴英雄》"));
-    //pDm->BindWindow((long)hwndHOS, "gdi", "windows", "windows", 0);
+    // HWND hwndHOS = FindWindow(TEXT("Heroes of the Storm"), TEXT("《风暴英雄》"));
+    // pDm->BindWindow((long)hwndHOS, "gdi", "windows", "windows", 0);
 
-    //pDm->SetWindowSize((long)hwndHOS, 1040, 759);
-    //pDm->UnBindWindow();
+    // pDm->SetWindowSize((long)hwndHOS, 1040, 759);
+    // pDm->UnBindWindow();
 }
 
-
 /**************************************************************************************/
-
 
 /**************************                                 **************************/
 
-
 /**************************************************************************************/
 
-
 /*槽函数*/
-//重启完毕执行的函数
+// 重启完毕执行的函数
 void Control::onRestartupThreadEnd(int flag) {
     if (flag == 0) {
         CloseHandle(hRestartupThread);
@@ -671,12 +560,10 @@ void Control::onRestartupThreadEnd(int flag) {
         /*延迟5秒重开*/
         Sleep(5000);
         restartupHOS();
-    }
-    else if (flag == 1) {
+    } else if (flag == 1) {
         CloseHandle(hRestartupThread);
         hRestartupThread = 0;
         /*手动模式结束时播放提示音*/
         this->tool->playSound(":/HOS_Script/Resources/mua.wav");
     }
-
 }
