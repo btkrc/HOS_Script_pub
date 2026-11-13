@@ -1,0 +1,24 @@
+<RCC>
+  <qresource prefix="HOS_Script">
+    <file>Resources/1.bmp</file>
+    <file>Resources/hqsd1.wav</file>
+    <file>Resources/hqsd2.wav</file>
+    <file>Resources/fast.png</file>
+    <file>Resources/manual.png</file>
+    <file>Resources/ah.wav</file>
+    <file>Resources/mua.wav</file>
+    <file>Resources/welcome.wav</file>
+    <file>Resources/70BasicIcons-all-06.png</file>
+    <file>Resources/error.wav</file>
+    <file>Resources/yo.wav</file>
+    <file>Resources/挂机关闭.wav</file>
+    <file>Resources/挂机开启.wav</file>
+    <file>Resources/退出线程.wav</file>
+    <file>Resources/意外中止.wav</file>
+    <file>Resources/information.png</file>
+    <file>Resources/70BasicIcons-all-33.png</file>
+    <file>Resources/favicon.ico</file>
+    <file>Resources/wz.png</file>
+    <file>Resources/zuixiaohua_1.png</file>
+  </qresource>
+</RCC>
